@@ -22,6 +22,7 @@
     .ilustrasi-col img {
         width: 220px;
         max-width: 100%;
+        animation: fadeInUp 0.6s ease both;
     }
 
     .btn-survey {
@@ -39,27 +40,59 @@
         font-weight: 600;
         text-decoration: none;
         cursor: pointer;
-        transition: background 0.2s;
+        transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
     }
 
     .btn-survey:hover {
         background: #0D47A1;
         color: #fff;
         text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(21,101,192,0.3);
     }
 
-    /* ===== JUDUL CEK ===== */
+    /* ===== KEYFRAMES ===== */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.82) translateY(16px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes slideInBottom {
+        from { opacity: 0; transform: translateY(36px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideInLeft {
+        from { opacity: 0; transform: translateX(-16px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(16px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ===== LOAD ANIMATIONS ===== */
     .cek-title {
         font-size: 26px;
         font-weight: 800;
         color: #1565C0;
         margin-bottom: 2px;
+        text-align: center;
+        animation: fadeInUp 0.5s ease both;
     }
 
     .cek-subtitle {
         font-size: 13px;
         color: #6C757D;
         margin-bottom: 20px;
+        text-align: center;
+        animation: fadeInUp 0.5s ease 0.1s both;
     }
 
     /* ===== CARD ===== */
@@ -68,6 +101,12 @@
         border-radius: 12px;
         border: 1px solid #DEE2E6;
         overflow: hidden;
+        animation: fadeInUp 0.5s ease 0.15s both;
+        transition: box-shadow 0.3s;
+    }
+
+    .card-cek:hover {
+        box-shadow: 0 8px 32px rgba(21,101,192,0.10);
     }
 
     /* ===== TABS ===== */
@@ -92,7 +131,27 @@
         gap: 8px;
         border-bottom: 2px solid transparent;
         margin-bottom: -1px;
-        transition: all 0.2s;
+        transition: color 0.25s, background 0.25s, border-color 0.25s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tab-btn::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        background: rgba(21,101,192,0.08);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+        opacity: 0;
+    }
+
+    .tab-btn:active::after {
+        width: 200px;
+        height: 200px;
+        opacity: 1;
     }
 
     .tab-btn.active {
@@ -111,11 +170,13 @@
         font-size: 10px;
         background: #E3F2FD;
         color: #1565C0;
+        transition: background 0.25s, color 0.25s, transform 0.25s;
     }
 
     .tab-btn.active .tab-icon {
         background: #1565C0;
         color: #fff;
+        transform: scale(1.15);
     }
 
     .tab-btn.spmb .tab-icon {
@@ -126,12 +187,16 @@
     .tab-btn.spmb.active .tab-icon {
         background: #2E7D32;
         color: #fff;
+        transform: scale(1.15);
     }
 
-    /* ===== FORM ===== */
+    /* ===== TAB BODY ===== */
     .tab-body {
         padding: 20px;
     }
+
+    .tab-body.anim-left  { animation: slideInLeft  0.28s ease both; }
+    .tab-body.anim-right { animation: slideInRight 0.28s ease both; }
 
     .tab-label {
         font-size: 13px;
@@ -140,6 +205,7 @@
         margin-bottom: 14px;
     }
 
+    /* ===== FORM ===== */
     .form-select-dtsen,
     .form-control-dtsen {
         width: 100%;
@@ -157,7 +223,7 @@
         background-repeat: no-repeat;
         background-position: right 14px center;
         padding-right: 36px;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
 
     .form-control-dtsen {
@@ -170,6 +236,12 @@
         outline: none;
         border-color: #1565C0;
         box-shadow: 0 0 0 3px rgba(21,101,192,0.10);
+        transform: translateY(-1px);
+    }
+
+    .form-select-dtsen:hover,
+    .form-control-dtsen:hover {
+        border-color: #90CAF9;
     }
 
     .nik-wrapper {
@@ -184,6 +256,11 @@
         transform: translateY(-50%);
         color: #90CAF9;
         font-size: 13px;
+        transition: color 0.2s;
+    }
+
+    .nik-wrapper:focus-within .nik-icon {
+        color: #1565C0;
     }
 
     .nik-wrapper .form-control-dtsen {
@@ -191,6 +268,7 @@
         margin-bottom: 0;
     }
 
+    /* ===== TOMBOL CARI ===== */
     .btn-cari {
         background: #1565C0;
         color: #fff;
@@ -202,10 +280,31 @@
         font-weight: 700;
         cursor: pointer;
         margin-top: 4px;
-        transition: background 0.2s;
+        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
     }
 
-    .btn-cari:hover { background: #0D47A1; }
+    .btn-cari:hover {
+        background: #0D47A1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px rgba(21,101,192,0.35);
+    }
+
+    .btn-cari:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+    .btn-cari.loading {
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    .select-loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
 
     /* ===== INFO SECTION ===== */
     .info-section {
@@ -215,6 +314,7 @@
         background: #fff;
     }
 
+    /* sembunyiin dulu, Baru JS yang hidupkan */
     .info-title {
         font-size: 28px;
         font-weight: 800;
@@ -222,6 +322,7 @@
         text-align: center;
         line-height: 1.3;
         margin-bottom: 8px;
+        opacity: 0;
     }
 
     .info-subtitle {
@@ -229,6 +330,16 @@
         color: #6C757D;
         text-align: center;
         margin: 0;
+        opacity: 0;
+    }
+
+    /* ===== SCROLL ANIM TARGETS ===== */
+    .footer-logo-item {
+        opacity: 0;
+    }
+
+    .footer-bottom-inner {
+        opacity: 0;
     }
 </style>
 @endpush
@@ -238,7 +349,7 @@
 {{-- HERO --}}
 <section class="hero-section">
     <div class="container">
-        <div class="row align-items-stretch">
+        <div class="row align-items-center justify-content-center">
 
             {{-- ILUSTRASI --}}
             <div class="col-md-4 col-lg-3">
@@ -257,22 +368,21 @@
                 <p class="cek-subtitle">Masukkan wilayah dan NIK untuk mengecek data</p>
 
                 <div class="card-cek">
-                    {{-- TABS --}}
                     <div class="tab-cek">
-                        <button class="tab-btn active" onclick="switchTab('nik', this)">
+                        <button class="tab-btn active" id="btn-nik" onclick="switchTab('nik', this)">
                             <span class="tab-icon"><i class="fas fa-id-card"></i></span>
                             Cek Kepesertaan DTSEN (NIK)
                         </button>
-                        <button class="tab-btn spmb" onclick="switchTab('spmb', this)">
+                        <button class="tab-btn spmb" id="btn-spmb" onclick="switchTab('spmb', this)">
                             <span class="tab-icon"><i class="fas fa-check-circle"></i></span>
                             Cek Status Afirmasi SPMB 2026
                         </button>
                     </div>
 
                     {{-- TAB NIK --}}
-                    <div id="tab-nik" class="tab-body">
+                    <div id="tab-nik" class="tab-body anim-left">
                         <p class="tab-label">CEK Kepesertaan DT Jateng Berdasarkan NIK</p>
-                        <form action="{{ route('cek.kepesertaan') }}" method="GET">
+                        <form action="{{ route('cek.kepesertaan') }}" method="GET" id="form-nik">
                             <select name="kabupaten" class="form-select-dtsen" id="sel-kabupaten" required>
                                 <option value="" disabled selected>Pilih Kabupaten/Kota</option>
                                 @foreach($kabupaten ?? [] as $item)
@@ -294,7 +404,7 @@
                                     placeholder="NIK" maxlength="16" pattern="\d{16}">
                             </div>
 
-                            <button type="submit" class="btn-cari">
+                            <button type="submit" class="btn-cari" id="btn-cari">
                                 <i class="fas fa-search me-1"></i> Cari
                             </button>
                         </form>
@@ -322,7 +432,7 @@
                             </button>
                         </form>
                     </div>
-                </div>{{-- /card-cek --}}
+                </div>
             </div>
 
         </div>
@@ -341,38 +451,115 @@
 
 @push('scripts')
 <script>
+// ===== TAB SWITCH =====
+let activeTab = 'nik';
+
 function switchTab(tab, btn) {
-    document.getElementById('tab-nik').style.display  = 'none';
-    document.getElementById('tab-spmb').style.display = 'none';
-    document.getElementById('tab-' + tab).style.display = 'block';
+    if (tab === activeTab) return;
+    const arahMasuk = tab === 'spmb' ? 'anim-right' : 'anim-left';
+    const elAktif = document.getElementById('tab-' + activeTab);
+    elAktif.style.display = 'none';
+    elAktif.classList.remove('anim-left', 'anim-right');
+    const elBaru = document.getElementById('tab-' + tab);
+    elBaru.style.display = 'block';
+    elBaru.classList.remove('anim-left', 'anim-right');
+    void elBaru.offsetWidth;
+    elBaru.classList.add(arahMasuk);
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    activeTab = tab;
 }
 
+// ===== CASCADING DROPDOWN =====
 document.getElementById('sel-kabupaten').addEventListener('change', function () {
-    const id = this.value;
-    const kec = document.getElementById('sel-kecamatan');
+    const id   = this.value;
+    const kec  = document.getElementById('sel-kecamatan');
     const desa = document.getElementById('sel-desa');
-    kec.innerHTML  = '<option value="" disabled selected>Memuat...</option>';
+    kec.classList.add('select-loading');
+    kec.innerHTML  = '<option value="" disabled selected>Memuat kecamatan...</option>';
     desa.innerHTML = '<option value="" disabled selected>Pilih Desa/Kelurahan</option>';
     fetch(`/api/kecamatan/${id}`)
         .then(r => r.json())
         .then(data => {
             kec.innerHTML = '<option value="" disabled selected>Pilih Kecamatan</option>';
             data.forEach(k => kec.innerHTML += `<option value="${k.id}">${k.nama}</option>`);
+            kec.classList.remove('select-loading');
+        })
+        .catch(() => {
+            kec.innerHTML = '<option value="" disabled selected>Gagal memuat</option>';
+            kec.classList.remove('select-loading');
         });
 });
 
 document.getElementById('sel-kecamatan').addEventListener('change', function () {
-    const id = this.value;
+    const id   = this.value;
     const desa = document.getElementById('sel-desa');
-    desa.innerHTML = '<option value="" disabled selected>Memuat...</option>';
+    desa.classList.add('select-loading');
+    desa.innerHTML = '<option value="" disabled selected>Memuat desa...</option>';
     fetch(`/api/desa/${id}`)
         .then(r => r.json())
         .then(data => {
             desa.innerHTML = '<option value="" disabled selected>Pilih Desa/Kelurahan</option>';
             data.forEach(d => desa.innerHTML += `<option value="${d.id}">${d.nama}</option>`);
+            desa.classList.remove('select-loading');
+        })
+        .catch(() => {
+            desa.innerHTML = '<option value="" disabled selected>Gagal memuat</option>';
+            desa.classList.remove('select-loading');
         });
 });
+
+// ===== LOADING TOMBOL CARI =====
+document.getElementById('form-nik').addEventListener('submit', function () {
+    const btn = document.getElementById('btn-cari');
+    btn.classList.add('loading');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Mencari...';
+});
+
+// ===== Animasi Scroll =====
+const opts = { threshold: 0.15, rootMargin: '0px 0px -30px 0px' };
+
+const scrollObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+
+        if (el.classList.contains('info-title')) {
+            el.style.animation = 'fadeInUp 0.6s ease both';
+            el.style.opacity   = '1';
+        }
+        else if (el.classList.contains('info-subtitle')) {
+            el.style.animation = 'fadeInUp 0.6s ease 0.18s both';
+            el.style.opacity   = '1';
+        }
+        else if (el.classList.contains('footer-logo-item')) {
+            const delay = (el.dataset.logoIdx || 0) * 120;
+            el.style.animation = `fadeInScale 0.5s ease ${delay}ms both`;
+            el.style.opacity   = '1';
+        }
+        else if (el.classList.contains('footer-bottom-inner')) {
+            el.style.animation = 'slideInBottom 0.6s ease both';
+            el.style.opacity   = '1';
+        }
+
+        scrollObs.unobserve(el);
+    });
+}, opts);
+
+// Register elemen info section
+const infoTitle    = document.querySelector('.info-title');
+const infoSubtitle = document.querySelector('.info-subtitle');
+if (infoTitle)    scrollObs.observe(infoTitle);
+if (infoSubtitle) scrollObs.observe(infoSubtitle);
+
+// Register footer logos dengan delay stagger
+document.querySelectorAll('.footer-logo-item').forEach((el, i) => {
+    el.dataset.logoIdx = i;
+    scrollObs.observe(el);
+});
+
+// Register footer bottom
+const footerBottomInner = document.querySelector('.footer-bottom-inner');
+if (footerBottomInner) scrollObs.observe(footerBottomInner);
 </script>
 @endpush

@@ -272,6 +272,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="#">DT Jateng</a></li>
+                    <li><a class="dropdown-item {{ request()->is('ppks*') ? 'active' : '' }}" href="{{ url('/ppks') }}">PPKS</a></li>
                     <li><a class="dropdown-item" href="#">PSKS</a></li>
                 </ul>
             </li>
