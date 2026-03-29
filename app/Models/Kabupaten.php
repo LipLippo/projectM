@@ -10,7 +10,7 @@ class Kabupaten extends Model
     protected $primaryKey = 'id';
 
     public $incrementing = false; // ini boleh karena ID bukan auto increment
-    protected $keyType = 'int';   // 🔥 FIX DI SINI (bukan string)
+    protected $keyType = 'int';   //  FIX DI SINI (bukan string)
 
     protected $fillable = ['id', 'nama'];
 
