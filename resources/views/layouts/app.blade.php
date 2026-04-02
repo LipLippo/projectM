@@ -271,9 +271,9 @@
                     Rilis Data
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#">DT Jateng</a></li>
+                    <li><a class="dropdown-item {{ request()->is('dt-jateng*') ? 'active' : '' }}" href="{{ url('/dt-jateng') }}">DT Jateng</a></li>
                     <li><a class="dropdown-item {{ request()->is('ppks*') ? 'active' : '' }}" href="{{ url('/ppks') }}">PPKS</a></li>
-                    <li><a class="dropdown-item" href="#">PSKS</a></li>
+                    <li><a class="dropdown-item {{ request()->is('psks*') ? 'active' : '' }}" href="{{ url('/psks') }}">PSKS</a></li>
                 </ul>
             </li>
             <li class="nav-item">

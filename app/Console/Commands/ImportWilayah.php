@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class ImportWilayah extends Command
 {
-    protected $signature   = 'wilayah:import';
+    protected $signature   = 'wilayah:import {--retry-failed : Hanya import desa yang gagal/belum ada, tanpa truncate}';
     protected $description = 'Import data kecamatan & desa Jawa Tengah dari API wilayah.web.id';
 
     // Kode semua kabupaten/kota Jawa Tengah
@@ -19,8 +19,18 @@ class ImportWilayah extends Command
         '3371','3372','3373','3374','3375','3376',
     ];
 
+    private int $maxRetries = 3;
+
     public function handle(): void
     {
+        $retryFailed = $this->option('retry-failed');
+
+        if ($retryFailed) {
+            $this->info('Mode: Retry - hanya import desa yang belum ada...');
+            $this->retryFailed();
+            return;
+        }
+
         $this->info('Memulai import data wilayah Jawa Tengah dari wilayah.web.id...');
 
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
@@ -30,16 +40,16 @@ class ImportWilayah extends Command
 
         $totalKec  = 0;
         $totalDesa = 0;
+        $failedKecamatanDesa = [];
 
         foreach ($this->kabupatenIds as $kabId) {
             $this->line("  → Kabupaten/Kota: {$kabId}");
 
             try {
-                $resp = Http::timeout(15)
-                    ->get("https://wilayah.web.id/api/districts/{$kabId}");
+                $resp = $this->httpGetWithRetry("https://wilayah.web.id/api/districts/{$kabId}");
 
-                if (!$resp->successful()) {
-                    $this->warn("    Gagal ambil kecamatan {$kabId} (HTTP {$resp->status()})");
+                if (!$resp || !$resp->successful()) {
+                    $this->warn("    Gagal ambil kecamatan {$kabId}");
                     continue;
                 }
 
@@ -65,10 +75,9 @@ class ImportWilayah extends Command
 
                     // Ambil desa per kecamatan
                     try {
-                        $respDesa = Http::timeout(15)
-                            ->get("https://wilayah.web.id/api/villages/{$kecId}");
+                        $respDesa = $this->httpGetWithRetry("https://wilayah.web.id/api/villages/{$kecId}");
 
-                        if ($respDesa->successful()) {
+                        if ($respDesa && $respDesa->successful()) {
                             $desaList  = $respDesa->json('data') ?? [];
                             $desaBatch = [];
                             foreach ($desaList as $desa) {
@@ -85,12 +94,16 @@ class ImportWilayah extends Command
                                 DB::table('desa')->insertOrIgnore($desaBatch);
                                 $totalDesa += count($desaBatch);
                             }
+                        } else {
+                            $failedKecamatanDesa[] = $kecId;
+                            $this->warn("    ⚠️  Gagal desa kecamatan {$kecId} setelah {$this->maxRetries}x retry");
                         }
                     } catch (\Exception $e) {
-                        $this->warn("    Gagal desa kecamatan {$kecId}: " . $e->getMessage());
+                        $failedKecamatanDesa[] = $kecId;
+                        $this->warn("    ⚠️  Gagal desa kecamatan {$kecId}: " . $e->getMessage());
                     }
 
-                    usleep(200000); // 200ms delay
+                    usleep(300000); // 300ms delay
                 }
 
                 if (!empty($kecBatch)) {
@@ -108,5 +121,115 @@ class ImportWilayah extends Command
         $this->info('✅ Import selesai!');
         $this->info("   Total kecamatan : {$totalKec}");
         $this->info("   Total desa       : {$totalDesa}");
+
+        if (!empty($failedKecamatanDesa)) {
+            $this->warn('');
+            $this->warn('⚠️  Kecamatan yang gagal import desa:');
+            foreach ($failedKecamatanDesa as $kecId) {
+                $this->warn("   - {$kecId}");
+            }
+            $this->info('');
+            $this->info('Jalankan: php artisan wilayah:import --retry-failed');
+        }
+    }
+
+    /**
+     * Retry hanya untuk kecamatan yang belum punya desa di database.
+     */
+    private function retryFailed(): void
+    {
+        // Cari kecamatan yang belum punya desa
+        $kecamatanTanpaDesa = DB::table('kecamatan')
+            ->leftJoin('desa', 'kecamatan.id', '=', 'desa.kecamatan_id')
+            ->whereNull('desa.id')
+            ->pluck('kecamatan.id', 'kecamatan.nama');
+
+        if ($kecamatanTanpaDesa->isEmpty()) {
+            $this->info('✅ Semua kecamatan sudah memiliki data desa!');
+            return;
+        }
+
+        $this->info("Ditemukan {$kecamatanTanpaDesa->count()} kecamatan tanpa desa:");
+
+        $totalDesa = 0;
+        $stillFailed = [];
+
+        foreach ($kecamatanTanpaDesa as $nama => $kecId) {
+            $this->line("  → Kecamatan: {$nama} ({$kecId})");
+
+            try {
+                $respDesa = $this->httpGetWithRetry("https://wilayah.web.id/api/villages/{$kecId}");
+
+                if ($respDesa && $respDesa->successful()) {
+                    $desaList  = $respDesa->json('data') ?? [];
+                    $desaBatch = [];
+                    foreach ($desaList as $desa) {
+                        $desaId   = $desa['code'] ?? $desa['id'] ?? null;
+                        $desaNama = $desa['name'] ?? $desa['nama'] ?? '';
+                        if (!$desaId) continue;
+                        $desaBatch[] = [
+                            'id'           => $desaId,
+                            'kecamatan_id' => $kecId,
+                            'nama'         => $desaNama,
+                        ];
+                    }
+                    if (!empty($desaBatch)) {
+                        DB::table('desa')->insertOrIgnore($desaBatch);
+                        $totalDesa += count($desaBatch);
+                        $this->info("    ✅ " . count($desaBatch) . " desa ditambahkan");
+                    } else {
+                        $this->warn("    ⚠️  API mengembalikan 0 desa untuk {$kecId}");
+                    }
+                } else {
+                    $stillFailed[] = $kecId;
+                    $this->warn("    ❌ Masih gagal setelah {$this->maxRetries}x retry");
+                }
+            } catch (\Exception $e) {
+                $stillFailed[] = $kecId;
+                $this->warn("    ❌ Error: " . $e->getMessage());
+            }
+
+            usleep(500000); // 500ms delay antar request
+        }
+
+        $this->info('');
+        $this->info("✅ Retry selesai! {$totalDesa} desa berhasil ditambahkan.");
+
+        if (!empty($stillFailed)) {
+            $this->warn('⚠️  Masih gagal: ' . implode(', ', $stillFailed));
+            $this->info('   Coba jalankan lagi: php artisan wilayah:import --retry-failed');
+        }
+    }
+
+    /**
+     * HTTP GET dengan retry dan exponential backoff.
+     */
+    private function httpGetWithRetry(string $url, int $timeout = 30): ?\Illuminate\Http\Client\Response
+    {
+        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+            try {
+                $response = Http::timeout($timeout)->get($url);
+
+                if ($response->successful()) {
+                    return $response;
+                }
+
+                if ($attempt < $this->maxRetries) {
+                    $delay = $attempt * 2; // 2s, 4s, 6s
+                    sleep($delay);
+                }
+            } catch (\Exception $e) {
+                if ($attempt < $this->maxRetries) {
+                    $delay = $attempt * 2;
+                    $this->line("    ↻ Retry {$attempt}/{$this->maxRetries} setelah {$delay}s...");
+                    sleep($delay);
+                } else {
+                    $this->warn("    ✗ Gagal setelah {$this->maxRetries}x: " . $e->getMessage());
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 }
