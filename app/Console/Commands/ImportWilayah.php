@@ -62,6 +62,7 @@ class ImportWilayah extends Command
 
                 $kecBatch = [];
 
+                // 1. Kumpulkan data kecamatan dari API
                 foreach ($kecamatanList as $kec) {
                     $kecId   = $kec['code'] ?? $kec['id'] ?? null;
                     $kecNama = $kec['name'] ?? $kec['nama'] ?? '';
@@ -72,6 +73,19 @@ class ImportWilayah extends Command
                         'kabupaten_id' => $kabId,
                         'nama'         => $kecNama,
                     ];
+                }
+
+                // 2. SIMPAN KECAMATAN DULU KE DATABASE.
+                // Ini WAJIB dilakukan sebelum menyimpan desa agar relasi Foreign Key ('kecamatan_id') tidak gagal!
+                if (!empty($kecBatch)) {
+                    DB::table('kecamatan')->insertOrIgnore($kecBatch);
+                    $totalKec += count($kecBatch);
+                    $this->info("    ✅ " . count($kecBatch) . " kecamatan ditambahkan");
+                }
+
+                // 3. BARU KITA TARIK DAN SIMPAN DATA DESA
+                foreach ($kecBatch as $kecLoc) {
+                    $kecId = $kecLoc['id'];
 
                     // Ambil desa per kecamatan
                     try {
@@ -104,12 +118,6 @@ class ImportWilayah extends Command
                     }
 
                     usleep(300000); // 300ms delay
-                }
-
-                if (!empty($kecBatch)) {
-                    DB::table('kecamatan')->insertOrIgnore($kecBatch);
-                    $totalKec += count($kecBatch);
-                    $this->info("    ✅ " . count($kecBatch) . " kecamatan ditambahkan");
                 }
 
             } catch (\Exception $e) {
